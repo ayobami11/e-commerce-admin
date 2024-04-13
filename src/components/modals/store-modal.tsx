@@ -1,8 +1,11 @@
 'use client'
 
+import useSWRMutation from 'swr/mutation';
+
 import * as z from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'react-hot-toast';
 
 import { useStoreModal } from "@/hooks/use-store-modal";
 import { Modal } from "@/components/ui/modal";
@@ -21,6 +24,15 @@ const formSchema = z.object({
     name: z.string().min(1)
 });
 
+const createNewStore = async (url: string, { arg }: { arg: { name: string } }) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(arg)
+    });
+
+    return response.json();
+};
+
 export const StoreModal = () => {
 
     const storeModal = useStoreModal();
@@ -35,7 +47,19 @@ export const StoreModal = () => {
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         // todo: create store
         console.log(values);
+
+        try {
+            const result = await trigger(values);
+
+            // redirects to the  corresponding store
+            window.location.assign(`/${result.id}`);
+        } catch (error) {
+            toast.error('Something went wrong.');
+            console.log(error);
+        }
     }
+
+    const { trigger, isMutating } = useSWRMutation('/api/stores', createNewStore);
 
     return (
         <Modal
@@ -55,7 +79,11 @@ export const StoreModal = () => {
                                     <FormItem>
                                         <FormLabel>Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder='E-commerce' {...field} />
+                                            <Input
+                                                disabled={isMutating}
+                                                placeholder='E-commerce'
+                                                {...field}
+                                            />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -63,10 +91,14 @@ export const StoreModal = () => {
                             />
                             <div className='pt-6 space-x-2 flex items-center justify-end w-full'>
                                 <Button
+                                    disabled={isMutating}
                                     variant='outline'
                                     onClick={storeModal.onClose}
                                 >Cancel</Button>
-                                <Button type='submit'>Continue</Button>
+                                <Button
+                                    disabled={isMutating}
+                                    type='submit'
+                                >Continue</Button>
                             </div>
                         </form>
                     </Form>

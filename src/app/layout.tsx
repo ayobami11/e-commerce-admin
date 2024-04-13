@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 
 import { ModalProvider } from "@/providers/modal-provider";
+import { NextAuthProvider } from "@/providers/next-auth";
 
 import "./globals.css";
+import { ToastProvider } from "@/providers/toast-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,11 +19,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ModalProvider />
+        <NextAuthProvider>
+          <ToastProvider />
+          <ModalProvider />
           {children}
+        </NextAuthProvider>
       </body>
     </html>
   );
